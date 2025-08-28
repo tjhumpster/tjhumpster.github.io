@@ -14,19 +14,18 @@
     #map { height: 100vh; width: 100%; }
     .control { margin: 14px 0; padding: 10px 12px; background: #fff; border:1px solid #e6e2d6; border-radius: 14px; box-shadow: 0 1px 0 rgba(0,0,0,0.03); }
     .legend { position:absolute; bottom:16px; right:16px; background:#fff; padding:10px 12px; border:1px solid #e6e2d6; border-radius: 12px; font-size: 12px; line-height:1.2; box-shadow:0 2px 12px rgba(0,0,0,.06); }
-    .legend .bar { width: 180px; height: 12px; background: linear-gradient(90deg, #1e3a8a, #3b82f6, #facc15, #ef4444, #b91c1c); border-radius: 6px; margin:6px 0; }
-    .legend .bar2 { width: 180px; height: 12px; background: linear-gradient(90deg, #1e3a8a, #3b82f6, #facc15, #ef4444, #b91c1c); border-radius: 6px; margin:6px 0; }
+    .legend .bar { width: 180px; height: 12px; background: linear-gradient(90deg, #dbeafe, #3b82f6, #1e3a8a); border-radius: 6px; margin:6px 0; }
+    .legend .bar2 { width: 180px; height: 12px; background: linear-gradient(90deg, #fee5d9, #fcae91, #fb6a4a, #cb181d); border-radius: 6px; margin:6px 0; }
     .kpi { display:flex; gap:10px; flex-wrap:wrap; }
     .pill { background:#fff; border:1px solid #e6e2d6; border-radius:999px; padding:6px 10px; font-size:12px; }
     .footer { color:#7b766b; font-size:12px; margin-top:8px; }
-    .marker-label{ font-size:11px; color:#3b372f; font-weight:600; }
   </style>
 </head>
 <body>
   <div id="app">
     <aside id="sidebar">
       <h1>OVO Alps Coverage</h1>
-      <p class="sub">Heatmap showing chalet coverage (blue → red) and recommended growth areas (blue → red). Toggle layers below.</p>
+      <p class="sub">Heatmap showing chalet coverage (blue) and recommended growth areas (red/orange). Toggle layers below.</p>
       <div class="control">
         <label><input type="checkbox" id="toggleHeat" checked/> Coverage heat</label><br/>
         <label><input type="checkbox" id="toggleTargets" checked/> Target areas heat</label><br/>
@@ -38,7 +37,7 @@
         <span class="pill" id="totalPill">Total chalets: …</span>
         <span class="pill" id="placesPill">Places: …</span>
       </div>
-      <p class="footer">Blue → Red = coverage and target intensities (vibrant scale).</p>
+      <p class="footer">Blue = current coverage. Red/orange = undersupplied but strategic areas.</p>
     </aside>
     <div id="map"></div>
   </div>
@@ -83,7 +82,7 @@
     document.getElementById('totalPill').textContent = `Total chalets: ${total}`;
     document.getElementById('placesPill').textContent = `Places: ${data.length}`;
 
-    // Coverage heat layer
+    // Coverage heat layer (blue)
     let heatLayer;
     function buildHeat() {
       const denom = Number(scaleEl.value);
@@ -91,21 +90,21 @@
       if (heatLayer) heatLayer.remove();
       heatLayer = L.heatLayer(pts, { 
         radius: 28, blur: 22, maxZoom: 13, minOpacity: 0.25,
-        gradient:{0.1:'#1e3a8a',0.3:'#3b82f6',0.6:'#facc15',0.8:'#ef4444',1:'#b91c1c'}
+        gradient:{0.1:'#dbeafe',0.3:'#3b82f6',1:'#1e3a8a'}
       });
       if (document.getElementById('toggleHeat').checked) heatLayer.addTo(map);
       scaleOut.textContent = `/${denom}`;
     }
     buildHeat();
 
-    // Target heat layer
+    // Target heat layer (red/orange)
     let targetLayer;
     function buildTargetHeat() {
       const pts = targets.map(([name, lat, lon, cnt]) => [lat, lon, cnt/20]);
       if (targetLayer) targetLayer.remove();
       targetLayer = L.heatLayer(pts, { 
         radius: 28, blur: 22, maxZoom: 13, minOpacity:0.3,
-        gradient:{0.1:'#1e3a8a',0.3:'#3b82f6',0.6:'#facc15',0.8:'#ef4444',1:'#b91c1c'}
+        gradient:{0.1:'#fee5d9',0.3:'#fcae91',0.6:'#fb6a4a',1:'#cb181d'}
       });
       if (document.getElementById('toggleTargets').checked) targetLayer.addTo(map);
     }
@@ -124,7 +123,7 @@
     const legend = L.control({position:'bottomright'});
     legend.onAdd = function(){
       const div = L.DomUtil.create('div','legend');
-      div.innerHTML = `<strong>Coverage density</strong><div class='bar'></div><div style='display:flex;justify-content:space-between;'><span>Low</span><span>High</span></div><br/><strong>Target areas</strong><div class='bar2'></div><div style='display:flex;justify-content:space-between;'><span>Low</span><span>High</span></div>`;
+      div.innerHTML = `<strong>Coverage density (blue)</strong><div class='bar'></div><div style='display:flex;justify-content:space-between;'><span>Low</span><span>High</span></div><br/><strong>Target areas (red)</strong><div class='bar2'></div><div style='display:flex;justify-content:space-between;'><span>Low</span><span>High</span></div>`;
       return div;
     };
     legend.addTo(map);
